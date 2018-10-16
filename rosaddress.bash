@@ -60,7 +60,7 @@ function _func_comp_rosaddress(){
 }
 
 function _func_choose_ether_interface(){
-    ip_name=(`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}'`)
+    ip_name=(`ip link | awk -F: '$0 !~ "lo|vir|^[^0-9]"{print $2;getline}'`)
     echo "Choose the Ethernet interface..."
     select opt in "${ip_name[@]}"
     do

@@ -95,7 +95,8 @@ function _func_comp_rosaddress(){
 
 function _func_rosaddress() {
 	# Get now eth0 or wlan0 IP address
-	eth0_addr=$(ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1)
+    eth0_name=(`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}'`)
+	eth0_addr=$(ip -f inet -o addr show ${eth0_name[0]}|cut -d\  -f 7 | cut -d/ -f 1)
 	wlan0_addr=$(ip -f inet -o addr show wlan0|cut -d\  -f 7 | cut -d/ -f 1)
 
 	if [ $1 = "local" ]; then

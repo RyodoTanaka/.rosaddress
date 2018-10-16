@@ -1,10 +1,12 @@
 #!/bin/bash
 function _func_rosserver() {
+	if [ -z "$ip_addr" ]; then
+		echo "No Ethernet connection..."
 	else
-		echo "There are eth0 connection"
-		export ROS_MASTER_URI=http://${eth0_addr}:11311
-		export ROS_HOST_NAME=${eth0_addr}
-		export ROS_IP=${eth0_addr}
+		echo "There are Ethernet connection"
+		export ROS_MASTER_URI=http://${ip_addr}:11311
+		export ROS_HOST_NAME=${ip_addr}
+		export ROS_IP=${ip_addr}
 		export PS1="\[\033[41;1;33m\]<ROS_server>\[\033[0m\]\w$ "
 	fi
 
@@ -18,11 +20,13 @@ function _func_rosclient() {
 		echo $1
 		echo "Input the ROS server's IP address.'"
 	else
+		if [ -z "$ip_addr" ]; then
+			echo "No Ethernet connection..."
 		else
-			echo "There are eth0 connection"
+			echo "There are Ethernet connection"
 			export ROS_MASTER_URI=http://$1:11311
-			export ROS_HOST_NAME=${eth0_addr}
-			export ROS_IP=${eth0_addr}
+			export ROS_HOST_NAME=${ip_addr}
+			export ROS_IP=${ip_addr}
 			export PS1="\[\033[44;1;33m\]<ROS_client>\[\033[0m\]\w$ "
 		fi
 		env | grep "ROS_MASTER_URI"
@@ -55,16 +59,30 @@ function _func_comp_rosaddress(){
 	fi
 }
 
-function _func_rosaddress() {
-	# Get now eth0 or wlan0 IP address
-    eth0_name=(`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}'`)
-	eth0_addr=$(ip -f inet -o addr show ${eth0_name[0]}|cut -d\  -f 7 | cut -d/ -f 1)
+function _func_choose_ether_interface(){
+    ip_name=(`ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}'`)
+    echo "Choose the Ethernet interface..."
+    select opt in "${ip_name[@]}"
+    do
+        case $opt in
+            $opt )
+                ip_addr=$(ip -f inet -o addr show $opt | cut -d\  -f 7 | cut -d/ -f 1)
+                break
+                ;;
+        esac
+    done
+}
 
+
+function _func_rosaddress() {
 	if [ $1 = "local" ]; then
+        _func_choose_ether_interface
 		_func_roslocal
 	elif [ $1 = "server" ]; then
+        _func_choose_ether_interface
 		_func_rosserver
 	elif [ $1 = "client" ]; then
+        _func_choose_ether_interface
 		_func_rosclient $2
 	elif [ $1 = "exit" ]; then
 		_func_rosexit
